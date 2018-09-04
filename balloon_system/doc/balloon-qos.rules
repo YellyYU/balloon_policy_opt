@@ -1,0 +1,7 @@
+(def guest_qos (quest)
+{
+    (if (< guest.balloon_cur guest.balloon_min)
+        (guest.Control "balloon_target" guest.balloon_min) 0)
+})
+
+(with Guests guest (guest_qos guest))

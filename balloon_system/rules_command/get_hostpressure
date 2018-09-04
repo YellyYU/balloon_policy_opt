@@ -1,0 +1,4 @@
+#!/bin/bash
+path=/home/yelly/balloon_policy_opt/balloon_system/rules_command
+free=$(cat $path/host_free.txt)
+echo $free

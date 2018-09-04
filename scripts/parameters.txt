@@ -1,0 +1,4 @@
+step_grow_threshold: 0.7
+step_shrink_threshold: 0.4
+step_grow_step: 46000000
+step_shrink_step: 46000000

@@ -1,0 +1,101 @@
+### Auto-Balloon ###############################################################
+
+### Constants
+# If guest-used-memory/guest-total-memory exceeds this value,
+# the guest should be given more memory by ballooning
+(defvar grow_threshold .6)
+
+# If guest-used-memory/guest-total-memory is below this value,
+# memory would be taken from this guest by ballooning
+(defvar shrink_threshold .6)
+
+# for at once ballooning, 
+# grow size of guest so as used_percent is this value
+(defvar grow_ref .6)
+
+# for at once ballooning, 
+# shrink size of guest so as used_percent is this value
+(defvar shrink_ref .6)
+
+## for adpative once-to-reference ballooning,
+## when there's not enough free memory to grow, 
+## decrease memory demand by this value and retry
+## until demand shrink to zero
+(defvar grow_gap 5000000)
+#########################################
+
+### Helper functions
+(def mem_control (guest target new_hostfree)
+{
+    (defvar hostfree (guest.Opt_policy_set_command "set_hostpressure" new_hostfree))
+    (defvar tmp (guest.Control "balloon_target" target))
+})
+
+(def retry_grow_guest (guest hostfree)
+{
+	(defvar new_grow (/ hostfree grow_gap))
+	(set new_grow (* new_grow grow_gap))
+	(defvar target (+ guest.balloon_cur new_grow))
+	(defvar new_hostfree (- hostfree (- target guest.balloon_cur)))
+	(defvar tmp (mem_control guest target new_hostfree))
+})
+
+
+(def grow_guest (guest guest_used_mem)
+{
+    (defvar tmp (Host.Opt_policy_print_one "growing guest... to ref percent:%f" grow_ref))
+    (defvar target (guest.Opt_policy_float_divide guest_used_mem grow_ref))
+    (set target (guest.Opt_policy_float_to_int target))
+
+    (if (> target guest.balloon_max)
+	(set target guest.balloon_max) 0)
+
+    (defvar hostfree (guest.Opt_policy_get_command "get_hostpressure"))
+    (defvar new_hostfree (- hostfree (- target guest.balloon_cur)))
+    (if (> new_hostfree 0)
+	(mem_control guest target new_hostfree)
+	(retry_grow_guest guest hostfree))
+})
+
+(def shrink_guest (guest guest_used_mem)
+{    
+    (defvar tmp (Host.Opt_policy_print_one "shrinking guest... to ref percent:%f" shrink_ref))
+    (defvar target (guest.Opt_policy_float_divide guest_used_mem shrink_ref))
+    (set target (guest.Opt_policy_float_to_int target))
+
+    (if (< target guest.balloon_min)
+	(set target guest.balloon_min) 0)
+
+    (defvar hostfree (guest.Opt_policy_get_command "get_hostpressure"))
+    (defvar new_hostfree (- hostfree (- target guest.balloon_cur)))
+    (defvar tmp (mem_control guest target new_hostfree))
+})
+
+(def apply_guest (guest)
+{
+    (defvar name (guest.Opt_policy_prop guest "name"))
+    (defvar tmp (Host.Opt_policy_print_two "%s -- balloon_cur:%d" name guest.balloon_cur))
+    #(defvar guest_used_percent (guest.Opt_policy_used_percent))
+    (defvar guest_used_mem (- guest.balloon_cur guest.mem_unused))
+    (defvar guest_used_percent (guest.Opt_policy_float_divide guest_used_mem guest.balloon_cur))
+    (defvar tmp (Host.Opt_policy_print_three "%s -- guest_used_mem=%d, guest_used_percent=%f" name guest_used_mem guest_used_percent))
+
+    (if (< guest_used_percent shrink_threshold)
+	(shrink_guest guest guest_used_mem) 0)
+    (if (> guest_used_percent grow_threshold)
+	(grow_guest guest guest_used_mem) 0)
+})
+
+#########################################
+
+### Main script
+# Methodology: The goal is to shrink all guests fairly and by an amount
+# scaled to the level of host memory pressure.  If the host is under
+# severe pressure, scale back more aggressively.  We don't yet handle
+# symptoms of over-ballooning guests or try to balloon idle guests more
+# aggressively.  When the host is not under memory pressure, slowly
+# deflate the balloons.
+
+#(defvar host_free_percent (/ (Host.StatAvg "mem_free") Host.mem_available))
+#(with Guests guest (shrink_guest guest))
+(with Guests guest (apply_guest guest))

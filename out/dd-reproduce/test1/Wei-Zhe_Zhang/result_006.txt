@@ -1,0 +1,21 @@
+Done work:30822
+Done work:92000
+Done work:23102
+Done work:92000
+Done work:32549
+Done work:92000
+Done work:37105
+Done work:92000
+Done work:35662
+Done work:92000
+Done work:9337
+Done work:92000
+Done work:37896
+Done work:92000
+Done work:11525
+Done work:92000
+Done work:48765
+Done work:92000
+Done work:56935
+Done work:92000
+test1_p1, all mallocRand finished

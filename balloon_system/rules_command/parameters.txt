@@ -1,0 +1,9 @@
+step
+step_grow_threshold: 0.8
+step_shrink_threshold: 0.6
+step_grow_step: 100663296
+step_shrink_step: 100663296
+ref_grow_threshold: 0.9
+ref_shrink_threshold: 0.3
+ref_grow_ref: 0.9
+ref_shrink_ref: 0.3

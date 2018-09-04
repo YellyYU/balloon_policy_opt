@@ -1,0 +1,14 @@
+### Auto-Balloon ###############################################################
+
+#########################################
+
+(def apply_guest (guest)
+{
+    (defvar tmp (guest.opt_policy_select guest))
+})
+
+### Main script
+
+#(defvar host_free_percent (/ (Host.StatAvg "mem_free") Host.mem_available))
+#(with Guests guest (shrink_guest guest))
+(with Guests guest (apply_guest guest))

@@ -1,0 +1,19 @@
+### Auto-Balloon ###############################################################
+
+(def apply_guest (guest)
+{
+    (defvar tmp (guest.opt_policy))
+})
+
+
+### Main script
+# Methodology: The goal is to shrink all guests fairly and by an amount
+# scaled to the level of host memory pressure.  If the host is under
+# severe pressure, scale back more aggressively.  We don't yet handle
+# symptoms of over-ballooning guests or try to balloon idle guests more
+# aggressively.  When the host is not under memory pressure, slowly
+# deflate the balloons.
+
+#(defvar host_free_percent (/ (Host.StatAvg "mem_free") Host.mem_available))
+#(with Guests guest (shrink_guest guest))
+(with Guests guest (apply_guest guest))
